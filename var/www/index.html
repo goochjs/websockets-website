@@ -1,0 +1,70 @@
+<html>
+<head>
+<script language="JavaScript" src="mqttws31.js">
+</script>
+<script language="JavaScript">
+console.log('init');
+
+function randomString(len, charSet) {
+    charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var randomString = '';
+    for (var i = 0; i < len; i++) {
+    	var randomPoz = Math.floor(Math.random() * charSet.length);
+    	randomString += charSet.substring(randomPoz,randomPoz+1);
+    }
+    return randomString;
+}
+
+client_id = randomString(23);
+console.log(client_id);
+
+//client = new Messaging.Client("broker.mqttdashboard.com", 8000, client_id);
+client = new Messaging.Client("localhost", 9001, client_id);
+//client.startTrace();
+client.onConnectionLost = onConnectionLost;
+client.onMessageArrived = onMessageArrived;
+connect();
+
+function connect() {
+  client.connect({onSuccess:onConnect, onFailure:onFailure, useSSL:false, timeout:20, keepAliveInterval:10});
+}
+
+function onConnect() {
+  // Once a connection has been made, make a subscription and send a message.
+  console.log("onConnect");
+  client.subscribe("#", {qos:1,onSuccess:onSubscribe,onFailure:onSubscribeFailure});
+
+  message = new Messaging.Message("This is from the browser");
+  message.destinationName = "from/browser";
+  client.send(message);
+
+};
+
+function onSubscribe(x) {
+  console.log('subscribe');
+}
+
+function onSubscribeFailure(x) {
+  console.log('subscribe failed');
+}
+
+function onFailure(responseObject) {
+  console.log(responseObject);
+  //connect();
+}
+function onConnectionLost(responseObject) {
+  if (responseObject.errorCode !== 0)
+    console.log("onConnectionLost:"+responseObject.errorMessage);
+  //connect();
+};
+function onMessageArrived(message) {
+  //console.log(message);
+  console.log("onMessageArrived:"+message.payloadString);
+  //logg = client.getTraceLog();
+  //logg.forEach(function(valor) { console.log(valor); });
+  //client.stopTrace();
+  //client.disconnect();
+};
+</script>
+</head>
+</html>
